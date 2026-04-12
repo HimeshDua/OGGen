@@ -1,0 +1,28 @@
+{
+  "name": "oggen",
+  "type": "module",
+  "bin": {
+    "oggen": "dist/cli/index.js"
+  },
+  "scripts": {
+    "dev": "bun src/cli/index.ts",
+    "build": "tsc",
+    "start": "node dist/cli/index.js",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.0.0",
+    "playwright": "^1.44.0",
+    "sharp": "^0.33.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.4.0",
+    "vitest": "^1.5.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
