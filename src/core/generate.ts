@@ -10,24 +10,21 @@ export interface GenerateOptions {
   badge?: string;
   width: number;
   height: number;
+  textColor: string;
+  gridStyle: 'light' | 'dark';
+  compactMode: boolean;
 }
 
 export async function generate(opts: GenerateOptions): Promise<string> {
   const theme = getTheme(opts.theme);
-
   const screenshot = await capture(opts.url);
-
   const output = buildFilename(opts.url);
 
-  const {height, badge, title, width} = opts;
   await compose({
+    ...opts,
     screenshot,
+    theme: theme,
     output,
-    width,
-    height,
-    theme,
-    title,
-    badge,
   });
 
   return `OG/${output.host}/${output.og}`;

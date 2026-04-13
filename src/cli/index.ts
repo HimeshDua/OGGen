@@ -2,7 +2,7 @@ import {Command} from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
 import {generate} from '../core/generate.js';
-import {getThemes} from '../core/themes.js';
+import {getTheme, getThemes} from '../core/themes.js';
 
 const program = new Command();
 
@@ -16,52 +16,84 @@ program
   .option('--height <number>', 'Height', '630')
   .action(async opts => {
     try {
-      console.log(chalk.cyan('Generating OG image...'));
+      console.log(chalk.cyan('\n  oggen — OG image generator\n'));
 
+      // --- theme ---
       let theme = opts.theme;
-      let title: string = opts.title?.trim() || null;
-      let badge: string = opts.badge?.trim() || null;
-
       if (!theme) {
-        const themes = getThemes();
-        const selectedTheme = await prompts({
+        const res = await prompts({
           type: 'select',
           name: 'theme',
           message: 'Select a theme',
-          choices: themes.map(t => ({
-            title: t,
-            value: t,
-          })),
+          choices: getThemes().map(t => ({title: t, value: t})),
         });
-
-        theme = selectedTheme.theme;
+        theme = res.theme;
+        if (!theme) process.exit(0);
       }
 
-      if (!title) {
-        title = (await prompts({type: 'text', name: 'title', message: 'Add a title (optional)'}))
-          .title;
+      const themeData = getTheme(theme);
+
+      // --- content ---
+      const {title} = await prompts({
+        type: 'text',
+        name: 'title',
+        message: 'Title (optional)',
+      });
+
+      const {badge} = await prompts({
+        type: 'text',
+        name: 'badge',
+        message: 'Badge text (optional)  e.g. himeshdua.vercel.app',
+      });
+
+      // --- text color ---
+      const {textColor} = await prompts({
+        type: 'select',
+        name: 'textColor',
+        message: 'Title & badge color',
+        choices: [
+          {title: 'Auto  (picks based on theme)', value: 'auto'},
+          {title: 'Black', value: '#0a0a0a'},
+          {title: 'White', value: '#ffffff'},
+        ],
+      });
+
+      // --- grid options (only if theme uses grid) ---
+      let gridStyle: 'light' | 'dark' = 'dark';
+      if (themeData.grid) {
+        const res = await prompts({
+          type: 'select',
+          name: 'gridStyle',
+          message: 'Grid line color',
+          choices: [
+            {title: 'Dark  (for light backgrounds)', value: 'dark'},
+            {title: 'Light (for dark backgrounds)', value: 'light'},
+          ],
+        });
+        gridStyle = res.gridStyle ?? 'dark';
       }
 
-      if (!badge) {
-        badge = (
-          await prompts({
-            type: 'text',
-            name: 'badge',
-            message: 'Add a Badge (optional) eg: himeshdua.vercel.app',
-          })
-        ).badge;
-      }
+      // --- layout ---
+      const {compactMode} = await prompts({
+        type: 'confirm',
+        name: 'compactMode',
+        message: 'Compact layout?  (locks card position, disables text wrap & spacing expansion)',
+        initial: false,
+      });
 
       const file = await generate({
         url: opts.url,
         theme,
-        title,
-        badge,
+        title: title?.trim() || undefined,
+        badge: badge?.trim() || undefined,
+        textColor: textColor ?? 'auto',
+        gridStyle,
+        compactMode: compactMode ?? false,
         width: Number(opts.width),
         height: Number(opts.height),
       });
 
-      console.log(chalk.green(`Saved: ${file}`));
+      console.log(chalk.green(`\n  ✓ Saved: ${file}\n`));
     } catch (err) {
       console.error(chalk.red('Error:'), err);
       process.exit(1);

@@ -10,152 +10,152 @@ interface ComposeOptions {
   theme: Theme;
   title?: string;
   badge?: string;
+  textColor?: string;
+  themeMode: 'light' | 'dark';
+  gridStyle?: 'light' | 'dark';
+  compactMode?: boolean;
 }
+
+const LINE_HEIGHT = 64;
+const FONT_SIZE = 48;
 
 export async function compose(opts: ComposeOptions): Promise<void> {
   const {width, height} = opts;
+  const compact = opts.compactMode ?? false;
+  const fillColor =
+    opts.textColor && opts.textColor !== 'auto' ? opts.textColor : opts.theme.textColor;
+  // const isLight = fillColor === '#ffffff' || fillColor === 'white';
+
+  // const badgeStroke = isLight ? 'rgba(255,255,255,0.55)' : 'rgba(3,3,3,0.65)';
+  const badgeStroke =
+    opts.themeMode === 'dark' ? opts.theme.highlightColor : `${opts.theme.highlightColor}20`;
 
   const gridPattern = opts.theme.grid
     ? `
   <defs>
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+      <path d="M 40 0 L 0 0 0 40" fill="none"
+        stroke="rgba(${opts.gridStyle === 'light' ? '255,255,255' : '0,0,0'},0.15)"
+        stroke-width="1"/>
     </pattern>
   </defs>
-  <rect width="100%" height="100%" fill="url(#grid)" />
-`
+  <rect width="100%" height="100%" fill="url(#grid)" />`
     : '';
 
-  // === 1. GRADIENT BACKGROUND ===
+  // === 1. GRADIENT + GRID (single SVG) ===
   const gradientSvg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="${opts.theme.gradient[0]}"/>
+          <stop offset="0%"   stop-color="${opts.theme.gradient[0]}"/>
           <stop offset="50%"  stop-color="${opts.theme.gradient[1]}"/>
           <stop offset="100%" stop-color="${opts.theme.gradient[2]}"/>
         </linearGradient>
       </defs>
       <rect width="100%" height="100%" fill="url(#g)" />
-          ${gridPattern}
-    </svg>
-  `;
+      ${gridPattern}
+    </svg>`;
 
   let canvas = sharp(Buffer.from(gradientSvg));
-  const baseLayers: sharp.OverlayOptions[] = [];
 
-  // === 2. GRID OVERLAY ===
-  // if (opts.theme.grid) {
-  //   const gridSvg = `
-  //   <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-  //     <defs>
-  //       <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-  //         <path d="M 40 0 L 0 0 0 40" fill="blue" stroke="#EE4B2B" stroke-width="1"/>
-  //       </pattern>
-  //     </defs>
-  //     <rect width="${width}" height="${height}" fill="url(#grid)" />
-  //   </svg> `;
-  //   baseLayers.push({input: Buffer.from(gridSvg), blend: 'atop'});
-  // }
-
-  // === 3. DARK TINT (depth) ===
+  // === 2. DARK TINT ===
   const tintSvg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100%" height="100%" fill="black" opacity="0.08"/>
-    </svg>
-  `;
-  baseLayers.push({input: Buffer.from(tintSvg), blend: 'multiply'});
+      <rect width="100%" height="100%" fill="black" opacity="0.07"/>
+    </svg>`;
 
-  canvas = canvas.composite(baseLayers);
+  canvas = canvas.composite([{input: Buffer.from(tintSvg), blend: 'multiply'}]);
 
-  // === 4. CONTENT OVERLAYS ===
+  // === 3. CONTENT OVERLAYS ===
   const overlays: sharp.OverlayOptions[] = [];
 
   // --- Badge pill ---
   if (opts.badge) {
-    const pillW = Math.max(300, opts.badge.length * 14 + 80);
+    // ~10.5px per char at font-size 20 + 56px total horizontal padding
+    const pillW = Math.max(160, Math.ceil(opts.badge.length * 10.5) + 56);
+    const pillH = 42;
     const pillX = Math.floor(width / 2 - pillW / 2);
+    const pillY = 44;
+    const textY = pillY + pillH / 2 + 5.5; // +1 optical correction
 
     const badgeSvg = `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <rect
-          x="${pillX}" y="40"
-          rx="25" ry="25"
-          width="${pillW}" height="40"
-          fill="transparent"
-          stroke="#030303c2"
-          stroke-width="1"
+          x="${pillX}" y="${pillY}"
+          rx="21" ry="21"
+          width="${pillW}" height="${pillH}"
+          fill="${opts.theme.highlightColor}24"
+          stroke="${badgeStroke}"
+          stroke-width="1.2"
         />
         <text
-          x="50%" y="70"
+          x="50%"
+          y="${textY}"
           text-anchor="middle"
-          fill="#030303"
-          font-size="20"
+          dominant-baseline="middle"
+          fill="${fillColor}"
+          font-size="19"
           font-family="inter, ui-sans-serif, system-ui, sans-serif"
-          font-weight="500">
+          font-weight="500"
+          letter-spacing="0.2">
           ${escapeXML(opts.badge)}
         </text>
-      </svg>
-    `;
+      </svg>`;
     overlays.push({input: Buffer.from(badgeSvg)});
   }
 
-  // --- Title (wraps across multiple lines if needed) ---
+  // --- Title ---
   if (opts.title) {
-    // const lines = wrapTitle(opts.title, 38);
-    // const lineHeight = 86;
-    const startY = opts.badge ? 165 : 130;
-    const textElement = `<text
-          x="50%" y="${startY}"
+    const lines = compact ? [opts.title] : wrapTitle(opts.title, 36);
+    const lineCount = lines.length;
+
+    // In non-compact: start higher so multi-line block feels centered above card
+    const blockHeight = lineCount * LINE_HEIGHT;
+    const startY = compact
+      ? opts.badge
+        ? 170
+        : 140
+      : opts.badge
+        ? 158
+        : Math.max(110, 158 - Math.floor((lineCount - 1) * LINE_HEIGHT * 0.4));
+
+    const tspans = lines
+      .map((line, i) => {
+        const y = startY + i * LINE_HEIGHT;
+        return `<text
+          x="50%"
+          y="${y}"
           text-anchor="middle"
-          fill="black"
-          font-size="48"
+          dominant-baseline="middle"
+          fill="${fillColor}"
+          font-size="${FONT_SIZE}"
           font-weight="700"
           font-family="inter, ui-sans-serif, system-ui, sans-serif"
-          letter-spacing="-1">
-          ${escapeXML(opts.title)}
+          letter-spacing="-1.2">
+          ${escapeXML(line)}
         </text>`;
-
-    // const textElements = lines
-    //   .map((line, i) => {
-    //     const y = startY + i * lineHeight;
-    //     return `<text
-    //       x="50%" y="${y}"
-    //       text-anchor="middle"
-    //       fill="black"
-    //       font-size="48"
-    //       font-weight="700"
-    //       font-family="inter, ui-sans-serif, system-ui, sans-serif"
-    //       letter-spacing="-1">
-    //       ${escapeXML(line)}
-    //     </text>`;
-    //   })
-    //   .join('\n');
-    // oh yes hemss!!
+      })
+      .join('\n');
 
     const titleSvg = `
       <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-        ${textElement}
-      </svg>
-    `;
+        ${tspans}
+      </svg>`;
     overlays.push({input: Buffer.from(titleSvg)});
   }
 
-  // === 5. SCREENSHOT CARD ===
+  // === 4. SCREENSHOT CARD ===
   const cardWidth = 1000;
   const cardHeight = 520;
-
-  const titleLines = opts.title ? wrapTitle(opts.title, 38).length : 0;
-  const hasBadge = Boolean(opts.badge);
-  const cardTop = 240 + Math.max(0, titleLines - 1) * 86 + (hasBadge ? 0 : 0);
   const cardLeft = Math.floor((width - cardWidth) / 2);
 
-  // Rounded-corner mask applied to the screenshot
+  const titleLines = opts.title ? wrapTitle(opts.title, 36).length : 0;
+  const cardTop = compact ? 240 : 248 + Math.max(0, titleLines - 1) * LINE_HEIGHT;
+
   const maskSvg = `
     <svg width="${cardWidth}" height="${cardHeight}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${cardWidth}" height="${cardHeight}" rx="12" ry="12" fill="white"/>
-    </svg>
-  `;
+      <rect width="${cardWidth}" height="${cardHeight}" rx="14" ry="14" fill="white"/>
+    </svg>`;
 
   const screenshotResized = await sharp(opts.screenshot)
     .resize(cardWidth, cardHeight, {fit: 'cover', position: 'top'})
@@ -169,13 +169,13 @@ export async function compose(opts: ComposeOptions): Promise<void> {
   const glowSvg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <rect
-        x="${cardLeft - 4}" y="${cardTop - 4}"
-        rx="24" ry="24"
-        width="${cardWidth + 8}" height="${cardHeight + 8}"
-        fill="rgba(255,255,255,0.08)"
+        x="${cardLeft - 6}" y="${cardTop - 6}"
+        rx="26" ry="26"
+        width="${cardWidth + 12}" height="${cardHeight + 12}"
+        fill="rgba(255,255,255,0.07)"
       />
-    </svg>
-  `;
+    </svg>`;
+
   overlays.push({input: Buffer.from(glowSvg)});
   overlays.push({input: screenshotRounded, top: cardTop, left: cardLeft});
 
@@ -208,5 +208,5 @@ function wrapTitle(text: string, maxChars: number): string[] {
   }
 
   if (current) lines.push(current);
-  return lines.slice(0, 3); // max 3 lines
+  return lines.slice(0, 3);
 }
