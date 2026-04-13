@@ -8,19 +8,16 @@ export async function capture(url: string): Promise<Buffer> {
   const context = await browser.newContext({
     viewport: {width: 1200, height: 630},
     deviceScaleFactor: 2,
-    // colorScheme: 'dark',
+    colorScheme: 'dark',
   });
 
   const page = await context.newPage();
 
-  await page.goto(url, {waitUntil: 'networkidle'});
+  await page.goto(url, {waitUntil: 'domcontentloaded'});
   await page.evaluate(() => document.fonts.ready);
-
   await page.evaluate(() => {
     window.scrollTo(0, 0);
   });
-
-  await page.waitForTimeout(200);
 
   const buffer = await page.screenshot({
     type: 'png',
