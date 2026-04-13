@@ -2,7 +2,7 @@ import {Command} from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
 import {generate} from '../core/generate.js';
-import {getTheme, getThemes} from '../core/themes.js';
+import {getThemes} from '../core/themes.js';
 
 const program = new Command();
 
@@ -18,77 +18,62 @@ program
     try {
       console.log(chalk.cyan('\n  oggen — OG image generator\n'));
 
-      // --- theme ---
-      let theme = opts.theme;
-      if (!theme) {
-        const res = await prompts({
-          type: 'select',
-          name: 'theme',
-          message: 'Select a theme',
-          choices: getThemes().map(t => ({title: t, value: t})),
-        });
-        theme = res.theme;
-        if (!theme) process.exit(0);
-      }
+      // Theme
+      const theme =
+        opts.theme ||
+        (
+          await prompts({
+            type: 'select',
+            name: 'theme',
+            message: 'Select a theme',
+            choices: getThemes().map(t => ({title: t, value: t})),
+          })
+        ).theme;
 
-      const themeData = getTheme(theme);
+      if (!theme) process.exit(0);
 
-      // --- content ---
-      const {title} = await prompts({
-        type: 'text',
-        name: 'title',
-        message: 'Title (optional)',
-      });
+      // Inputs
+      const {title, badge} = await prompts([
+        {type: 'text', name: 'title', message: 'Title (optional)'},
+        {type: 'text', name: 'badge', message: 'Badge (optional)'},
+      ]);
 
-      const {badge} = await prompts({
-        type: 'text',
-        name: 'badge',
-        message: 'Badge text (optional)  e.g. himeshdua.vercel.app',
-      });
-
-      // --- text color ---
       const {textColor} = await prompts({
         type: 'select',
         name: 'textColor',
-        message: 'Title & badge color',
+        message: 'Text color',
         choices: [
-          {title: 'Auto  (picks based on theme)', value: 'auto'},
+          {title: 'Auto', value: 'auto'},
           {title: 'Black', value: '#0a0a0a'},
           {title: 'White', value: '#ffffff'},
         ],
+        initial: 0,
       });
 
-      // --- grid options (only if theme uses grid) ---
-      let gridStyle: 'light' | 'dark' = 'dark';
-      if (themeData.grid) {
-        const res = await prompts({
-          type: 'select',
-          name: 'gridStyle',
-          message: 'Grid line color',
-          choices: [
-            {title: 'Dark  (for light backgrounds)', value: 'dark'},
-            {title: 'Light (for dark backgrounds)', value: 'light'},
-          ],
-        });
-        gridStyle = res.gridStyle ?? 'dark';
-      }
+      const {showGrid} = await prompts({
+        type: 'toggle',
+        name: 'showGrid',
+        message: 'Grid overlay?',
+        initial: true,
+        active: 'yes',
+        inactive: 'no',
+      });
 
-      // --- layout ---
       const {compactMode} = await prompts({
         type: 'confirm',
         name: 'compactMode',
-        message: 'Compact layout?  (locks card position, disables text wrap & spacing expansion)',
-        initial: false,
+        message: 'Compact layout?',
+        initial: true,
       });
 
       const file = await generate({
         url: opts.url,
         theme,
-        title: title?.trim() || undefined,
-        badge: badge?.trim() || undefined,
-        textColor: textColor ?? 'auto',
-        gridStyle,
-        compactMode: compactMode ?? false,
+        title: title?.trim(),
+        badge: badge?.trim(),
+        textColor,
+        showGrid,
+        compactMode,
         width: Number(opts.width),
         height: Number(opts.height),
       });
