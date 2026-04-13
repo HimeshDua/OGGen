@@ -1,17 +1,30 @@
 import {chromium} from 'playwright';
 
 export async function capture(url: string): Promise<Buffer> {
-  const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const browser = await chromium.launch({
+    args: ['--no-sandbox'],
+  });
 
-  await page.setViewportSize({width: 1200, height: 680});
+  const context = await browser.newContext({
+    viewport: {width: 1200, height: 630},
+    deviceScaleFactor: 2,
+  });
+
+  const page = await context.newPage();
 
   await page.goto(url, {waitUntil: 'networkidle'});
   await page.evaluate(() => document.fonts.ready);
 
-  // await page.waitForLoadState('networkidle');
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+  });
 
-  const buffer = await page.screenshot({fullPage: false});
+  await page.waitForTimeout(100);
+
+  const buffer = await page.screenshot({
+    type: 'png',
+    fullPage: false,
+  });
 
   await browser.close();
   return buffer;

@@ -6,7 +6,8 @@ import {buildFilename} from '../utils/filename.js';
 export interface GenerateOptions {
   url: string;
   theme: string;
-  output?: string;
+  title?: string;
+  badge?: string;
   width: number;
   height: number;
 }
@@ -16,15 +17,18 @@ export async function generate(opts: GenerateOptions): Promise<string> {
 
   const screenshot = await capture(opts.url);
 
-  const output = opts.output ?? buildFilename(opts.url);
+  const output = buildFilename(opts.url);
 
+  const {height, badge, title, width} = opts;
   await compose({
     screenshot,
     output,
-    width: opts.width,
-    height: opts.height,
+    width,
+    height,
     theme,
+    title,
+    badge,
   });
 
-  return output;
+  return `OG/${output.host}/${output.og}`;
 }

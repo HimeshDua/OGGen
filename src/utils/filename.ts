@@ -1,4 +1,5 @@
-export function buildFilename(url: string): string {
+export function buildFilename(url: string): {og: string; host: string} {
   const host = new URL(url).hostname.replace('www.', '');
-  return `og-${host}.png`;
+  const route = new URL(url).pathname.split('/').filter(Boolean).join('-') || 'index';
+  return {og: `${route}.png`, host};
 }
