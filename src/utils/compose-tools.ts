@@ -47,9 +47,6 @@ export const getBadgeStroke = (badgeTheme: BasicTheme, highlightColor: string) =
   return badgeTheme === 'dark' ? highlightColor : `${highlightColor}20`;
 };
 
-export const getFillColor = (
-  textColor: ComposeOptions['textColor'],
-  themeTextColor: ComposeOptions['textColor']
-) => {
-  return textColor === 'auto' ? themeTextColor : textColor;
+export const getFillColor = (textColor: ComposeOptions['textColor'], themeHexColor: string) => {
+  return textColor === 'auto' ? themeHexColor : textColor;
 };

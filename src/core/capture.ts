@@ -8,6 +8,7 @@ export async function capture(url: string): Promise<Buffer> {
   const context = await browser.newContext({
     viewport: {width: 1200, height: 630},
     deviceScaleFactor: 2,
+    // colorScheme: 'dark',
   });
 
   const page = await context.newPage();
@@ -19,7 +20,7 @@ export async function capture(url: string): Promise<Buffer> {
     window.scrollTo(0, 0);
   });
 
-  await page.waitForTimeout(100);
+  await page.waitForTimeout(200);
 
   const buffer = await page.screenshot({
     type: 'png',

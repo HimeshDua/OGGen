@@ -9,7 +9,6 @@ const program = new Command();
 program.name('oggen').description('Generate OG images from URLs').version('0.1.0');
 
 program
-  .command('generate')
   .requiredOption('--url <string>')
   .option('--theme <string>')
   .option('--width <number>', 'Width', '1200')

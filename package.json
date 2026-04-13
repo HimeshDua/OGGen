@@ -5,7 +5,7 @@
     "oggen": "dist/cli/index.js"
   },
   "scripts": {
-    "dev": "bun src/cli/index.ts",
+    "generate": "bun src/cli/index.ts",
     "batch": "bun src/cli/batch.ts",
     "build": "tsc",
     "start": "node src/cli/index.js",

@@ -1,3 +1,19 @@
+/**
+ * Batch OG Generator
+ *
+ * Usage:
+ *   bun run batch --input=og.json
+ *
+ * Example:
+ *   bun run batch --input=og.json --theme=dark-grid
+ *
+ * JSON format (og.json):
+ * [
+ *   { "url": "https://example.com", "title": "Hello", "badge": "mysite.com" },
+ *   { "url": "https://foo.com", "title": "Foo Page" }
+ * ]
+ */
+
 import fs from 'fs/promises';
 import {Command} from 'commander';
 import chalk from 'chalk';
@@ -12,7 +28,6 @@ const limit = pLimit(3);
 program.name('oggen').description('Generate OG images from BATCH').version('0.1.0');
 
 program
-  .command('batch')
   .requiredOption('--input <path>', 'JSON file with OG configs')
   .option('--theme <string>')
   .option('--width <number>', 'Width', '1200')
