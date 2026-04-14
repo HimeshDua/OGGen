@@ -1,0 +1,10 @@
+This Folder contains Open Graph Images of user's requested url
+
+folder structure
+/your-website.com
+  /index.png
+  /about.png
+  /projects.png
+
+/your-second-website.com
+  /index.png
