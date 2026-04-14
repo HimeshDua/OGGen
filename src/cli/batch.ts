@@ -1,19 +1,3 @@
-/**
- * Batch OG Generator
- *
- * Usage:
- *   bun run batch --input=og.json
- *
- * Example:
- *   bun run batch --input=og.json --theme=dark-grid
- *
- * JSON format (og.json):
- * [
- *   { "url": "https://example.com", "title": "Hello", "badge": "mysite.com" },
- *   { "url": "https://foo.com", "title": "Foo Page" }
- * ]
- */
-
 import fs from 'fs/promises';
 import {Command} from 'commander';
 import chalk from 'chalk';
@@ -34,6 +18,8 @@ program
   .option('--height <number>', 'Height', '630')
   .action(async opts => {
     try {
+      const inputPath = `routes/${opts.input}`;
+
       console.log(chalk.cyan('\n  oggen — Batch generator\n'));
 
       const {browserTheme} = await prompts({
@@ -87,7 +73,7 @@ program
         initial: true,
       });
 
-      const raw = await fs.readFile(opts.input, 'utf-8');
+      const raw = await fs.readFile(inputPath, 'utf-8');
       const items: {
         url: string;
         title?: string;
