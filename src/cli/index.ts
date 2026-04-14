@@ -10,11 +10,14 @@ program.name('oggen').description('Generate OG images from URLs').version('0.1.0
 
 program
   .requiredOption('--url <string>')
+  .option('--http <boolean>', 'Http', false)
   .option('--theme <string>')
   .option('--width <number>', 'Width', '1200')
   .option('--height <number>', 'Height', '630')
   .action(async opts => {
     try {
+      const url = `${opts.http ? 'http' : 'https'}://${opts.url}`;
+
       console.log(chalk.cyan('\n  oggen — OG image generator\n'));
 
       const {browserTheme} = await prompts({
@@ -77,7 +80,7 @@ program
 
       const file = await generate({
         browserTheme,
-        url: opts.url,
+        url,
         theme,
         title: title?.trim(),
         badge: badge?.trim(),
