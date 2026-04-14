@@ -17,6 +17,16 @@ program
     try {
       console.log(chalk.cyan('\n  oggen — OG image generator\n'));
 
+      const {browserTheme} = await prompts({
+        type: 'select',
+        name: 'browserTheme',
+        message: 'Select browser theme mode (affects screenshot appearance)',
+        choices: [
+          {title: 'Light', selected: true, value: 'light'},
+          {title: 'Dark', value: 'dark'},
+        ],
+      });
+
       // Theme
       const theme =
         opts.theme ||
@@ -66,6 +76,7 @@ program
       });
 
       const file = await generate({
+        browserTheme,
         url: opts.url,
         theme,
         title: title?.trim(),

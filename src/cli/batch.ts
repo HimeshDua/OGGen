@@ -36,7 +36,16 @@ program
     try {
       console.log(chalk.cyan('\n  oggen — Batch generator\n'));
 
-      // Theme (same logic)
+      const {browserTheme} = await prompts({
+        type: 'select',
+        name: 'browserTheme',
+        message: 'Select browser theme mode (affects screenshot appearance)',
+        choices: [
+          {title: 'Light', selected: true, value: 'light'},
+          {title: 'Dark', value: 'dark'},
+        ],
+      });
+
       const theme =
         opts.theme ||
         (
@@ -50,7 +59,6 @@ program
 
       if (!theme) process.exit(0);
 
-      // Global options (applied to all)
       const {textColor} = await prompts({
         type: 'select',
         name: 'textColor',
@@ -79,7 +87,6 @@ program
         initial: true,
       });
 
-      // Read input file
       const raw = await fs.readFile(opts.input, 'utf-8');
       const items: {
         url: string;
@@ -93,11 +100,11 @@ program
 
       console.log(chalk.yellow(`\n  Generating ${items.length} OG images...\n`));
 
-      // 🚀 Run in parallel (controlled)
       const results = await Promise.all(
         items.map(item =>
           limit(() =>
             generate({
+              browserTheme,
               url: item.url,
               theme,
               title: item.title?.trim(),

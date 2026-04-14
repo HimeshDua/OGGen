@@ -3,18 +3,35 @@ type getGridPatternsType = {
   showGrid: boolean;
   gridLineTheme: BasicTheme;
 };
-
 export const getGridPatterns = ({showGrid, gridLineTheme}: getGridPatternsType) => {
-  return !showGrid
-    ? ''
-    : `<defs>
+  if (!showGrid) return '';
+
+  const stroke = gridStroke(gridLineTheme);
+
+  return `
+  <defs>
+    <!-- Grid pattern -->
     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-      <path d="M 40 0 L 0 0 0 40" fill="none"
-        stroke="${gridStroke(gridLineTheme)}"
+      <path d="M 40 0 L 0 0 0 40"
+        fill="none"
+        stroke="${stroke}"
         stroke-width="1"/>
     </pattern>
+
+    <!-- Radial fade mask -->
+    <radialGradient id="fade" cx="50%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="white" stop-opacity="1"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </radialGradient>
+
+    <mask id="grid-mask">
+      <rect width="100%" height="100%" fill="url(#fade)" />
+    </mask>
   </defs>
-  <rect width="100%" height="100%" fill="url(#grid)" />`;
+
+  <!-- Apply mask -->
+  <rect width="100%" height="100%" fill="url(#grid)" mask="url(#grid-mask)" />
+  `;
 };
 
 const gridStroke = (gridLineTheme: BasicTheme) => {

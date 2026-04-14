@@ -5,7 +5,7 @@ import {buildFilename} from '../utils/filename.js';
 
 export async function generate(opts: GenerateOptions): Promise<string> {
   const theme = getTheme(opts.theme);
-  const screenshot = await capture(opts.url);
+  const screenshot = await capture(opts.url, opts.browserTheme);
   const output = buildFilename(opts.url);
 
   await compose({
