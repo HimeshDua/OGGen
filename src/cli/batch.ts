@@ -18,6 +18,15 @@ program
   .option('--height <number>', 'Height', '630')
   .action(async opts => {
     try {
+      // const sitemap = await prompts({
+      //   type: 'toggle',
+      //   name: 'sitemap',
+      //   message: 'Does your website has sitemap?',
+      //   initial: false,
+      //   active: 'no',
+      //   inactive: 'yes',
+      // });
+
       const inputPath = `routes/${opts.input}`;
 
       console.log(chalk.cyan('\n  oggen — Batch generator\n'));
