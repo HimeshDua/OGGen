@@ -1,6 +1,6 @@
 <div align="center">
 
-# oggen
+# OGGen
 
 **Open Graph image generation — private, local, and actually yours.**
 
@@ -12,7 +12,7 @@
 
 ---
 
-Most OG image tools fall into one of two traps: hosted services that ship your URLs to someone else's server, or browser-based workflows where you're manually screenshotting and cropping one page at a time. **oggen** is neither.
+Most OG image tools fall into one of two traps: hosted services that ship your URLs to someone else's server, or browser-based workflows where you're manually screenshotting and cropping one page at a time. **OGGen** is neither.
 
 It's a local CLI that spins up a headless Chromium instance, navigates to your URLs, composites a polished gradient overlay with your title and badge on top of a live screenshot of your actual site, and writes production-ready 1200×630 PNGs directly to disk. Run it once for a single page or point it at a JSON file to process an entire site in parallel — either way, nothing leaves your machine.
 
@@ -20,7 +20,7 @@ It's a local CLI that spins up a headless Chromium instance, navigates to your U
 
 ## How it works
 
-oggen launches a headless Playwright browser, navigates to each URL, captures a screenshot at 1200×630, and passes it to a Sharp compositing pipeline. That pipeline layers a gradient background, an optional grid overlay, your title text, and a badge label on top of the screenshot — then writes the result to the `OG/` directory, organized by hostname.
+OGGen launches a headless Playwright browser, navigates to each URL, captures a screenshot at 1200×630, and passes it to a Sharp compositing pipeline. That pipeline layers a gradient background, an optional grid overlay, your title text, and a badge label on top of the screenshot — then writes the result to the `OG/` directory, organized by hostname.
 
 ---
 
@@ -29,8 +29,8 @@ oggen launches a headless Playwright browser, navigates to each URL, captures a 
 **1. Clone the repository**
 
 ```bash
-git clone https://github.com/HimeshDua/oggen.git
-cd oggen
+git clone https://github.com/HimeshDua/OGGen.git
+cd OGGen
 ```
 
 **2. Install dependencies**
@@ -59,7 +59,7 @@ bunx playwright install chromium
 bun generate --url=yourwebsite.com
 ```
 
-oggen will open an interactive prompt to walk you through all options before capturing the image.
+OGGen will open an interactive prompt to walk you through all options before capturing the image.
 
 ---
 
@@ -144,7 +144,7 @@ This keeps images from different sites cleanly separated and makes it easy to dr
 
 ## Themes
 
-oggen ships with the following built-in gradient themes:
+OGGen ships with the following built-in gradient themes:
 
 | Theme name | Style |
 |------------|-------|
@@ -206,7 +206,7 @@ Your custom theme will appear in the interactive prompt next time you run a gene
 ## Project Structure
 
 ```
-oggen/
+OGGen/
 ├── OG/               # Output directory — generated images live here
 ├── routes/           # Place your batch JSON config files here
 ├── src/
